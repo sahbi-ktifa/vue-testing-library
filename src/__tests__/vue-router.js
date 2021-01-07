@@ -1,34 +1,32 @@
-// Please notice that this example is a draft example on how to test
-// the router.
-// Related issue on Vue Test Utils: https://github.com/vuejs/vue-test-utils-next/issues/152
-
+/* eslint-disable vue/one-component-per-file */
+import {defineComponent} from 'vue'
+import {render} from '../index'
 import '@testing-library/jest-dom'
-import {waitFor} from '@testing-library/dom'
-import {render, fireEvent} from '..'
-import App from './components/Router/App.vue'
-import Home from './components/Router/Home.vue'
-import About from './components/Router/About.vue'
 
-const routes = [
-  {path: '/', component: Home},
-  {path: '/about', component: About},
-]
+const App = defineComponent({
+  name: 'App',
+  props: ['to'],
+  template: `<router-link :to="{to}">Learn More</router-link>`,
+})
 
-test('full app rendering/navigating', async () => {
-  // Notice how we pass a `routes` object to our render function.
-  const {findByText, getByText, getByTestId} = render(App, {routes})
+const ComponentB = defineComponent({
+  name: 'ComponentB',
+})
 
-  // Vue Router navigation is async, so we need to wait until the
-  // initial render happens
-  expect(await findByText('You are home')).toBeInTheDocument()
+const routeRecordRaw = {
+  path: '/',
+  name: 'componentB',
+  component: ComponentB,
+}
 
-  await fireEvent.click(getByTestId('about-link'))
+test('Component with route', async () => {
+  const {getByText} = await render(App, {
+    props: {to: routeRecordRaw.name},
+    routes: [routeRecordRaw],
+  })
 
-  // Same thing here: Vue Router navigation is async, so we need to wait until the
-  // navigation happens
-  await waitFor(() =>
-    expect(getByTestId('location-display')).toHaveTextContent('/about'),
-  )
+  const button = getByText('Learn More')
 
-  expect(getByText('You are on the about page')).toBeInTheDocument()
+  expect(button).toBeInTheDocument()
+  expect(button).toHaveAttribute('href', routeRecordRaw.path)
 })

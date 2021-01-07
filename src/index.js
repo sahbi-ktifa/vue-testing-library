@@ -32,6 +32,7 @@ function render(
     plugins.push(createStore(store))
   }
 
+  let isRouterReady = null
   if (routes) {
     const requiredRouter = require('vue-router')
     const {createRouter, createWebHistory} =
@@ -39,6 +40,8 @@ function render(
 
     const routerPlugin = createRouter({history: createWebHistory(), routes})
     plugins.push(routerPlugin)
+
+    isRouterReady = routerPlugin.isReady
   }
 
   const mountComponent = (Component, newProps) => {
@@ -62,7 +65,7 @@ function render(
 
   let wrapper = mountComponent(TestComponent)
 
-  return {
+  const renderResult = {
     container,
     baseElement,
     debug: (el = baseElement, maxLength, options) =>
@@ -80,6 +83,12 @@ function render(
     },
     ...getQueriesForElement(baseElement),
   }
+
+  if (routes) {
+    return isRouterReady().then(() => renderResult)
+  }
+
+  return renderResult
 }
 
 function unwrapNode(node) {
